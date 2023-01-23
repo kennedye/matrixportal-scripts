@@ -1,16 +1,39 @@
 """
 sample.py
-very basic interstate75/matrixportal code
+very basic matrixportal code
 not for individual resale
 """
 # pylint: disable=import-error,unused-import
 import time
+import os
+import sys
 import board
+import busio
 import displayio
 import framebufferio
 import rgbmatrix
 import terminalio
 from rainbowio import colorwheel
+from digitalio import DigitalInOut
+import neopixel
+from adafruit_esp32spi import adafruit_esp32spi
+from adafruit_esp32spi import adafruit_esp32spi_wifimanager
+import adafruit_requests as requests
+import adafruit_lis3dh  # accelerometer
+import adafruit_ds3231  # RTC
+try:
+    from secrets import secrets
+except ImportError:
+    print("WiFi secrets are kept in secrets.py, please add them there!")
+    raise
+
+
+
+board_type = os.uname().machine
+if 'Matrix Portal M4' not in board_type:
+    print(f"unsupported board type: {board_type}")
+    print("this code is designed to run on MatrixPortal M4")
+    sys.exit(1)
 
 # get rid of any pre-existing display
 displayio.release_displays()
@@ -27,16 +50,6 @@ MX_SERPENTINE = True  # whether alternate panels are rotated to shorten cabling
 
 MX_WIDTH = MX_BASE_WIDTH * MX_CHAIN_ACROSS
 MX_HEIGHT = MX_BASE_HEIGHT * MX_TILE_DOWN
-
-# don't forget to comment out whichever one you're not using below!
-
-# interstate_75 pins
-mx_rgb_pins = [board.R0, board.G0, board.B0, board.R1, board.G1, board.B1]
-mx_addr_pins = [board.ROW_A, board.ROW_B, board.ROW_C, board.ROW_D]
-mx_addr_pins_64 = [board.ROW_A, board.ROW_B, board.ROW_C, board.ROW_D, board.ROW_E]
-mx_clock_pin = board.CLK
-mx_latck_pin = board.LAT
-mx_output_enable_pin = board.OE
 
 # matrixportal M4 pins
 mx_rgb_pins = [
@@ -79,3 +92,28 @@ display = framebufferio.FramebufferDisplay(matrix, auto_refresh=MX_AUTO_REFRESH)
 master_group = displayio.Group()
 
 display.show(master_group)
+
+i2c = board.I2C()  # read for accelerometer and RTC
+
+# accelerometer - https://docs.circuitpython.org/projects/lis3dh/en/latest/
+lis3dh = adafruit_lis3dh.LIS3DH_I2C(i2c, address=0x19)
+# Set range of accelerometer (can be RANGE_2_G, RANGE_4_G, RANGE_8_G or RANGE_16_G).
+lis3dh.range = adafruit_lis3dh.RANGE_2_G
+# then do stuff with lis3dh.acceleration or the shake/tap functions
+
+# RTC - https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/circuitpython
+ds3231 = adafruit_ds3231.DS3231(i2c)
+current_time = ds3231.datetime  # struct_time
+
+
+# wifi
+esp32_cs = DigitalInOut(board.ESP_CS)
+esp32_ready = DigitalInOut(board.ESP_BUSY)
+esp32_reset = DigitalInOut(board.ESP_RESET)
+spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
+esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
+status_light = neopixel.NeoPixel(
+    board.NEOPIXEL, 1, brightness=0.2
+)
+wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
+# now do things like wifi.get() and wifi.post()

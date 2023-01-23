@@ -21,6 +21,7 @@ from adafruit_esp32spi import adafruit_esp32spi_wifimanager
 import adafruit_requests as requests
 import adafruit_lis3dh  # accelerometer
 import adafruit_ds3231  # RTC
+
 try:
     from secrets import secrets
 except ImportError:
@@ -28,9 +29,8 @@ except ImportError:
     raise
 
 
-
 board_type = os.uname().machine
-if 'Matrix Portal M4' not in board_type:
+if "Matrix Portal M4" not in board_type:
     print(f"unsupported board type: {board_type}")
     print("this code is designed to run on MatrixPortal M4")
     sys.exit(1)
@@ -112,8 +112,6 @@ esp32_ready = DigitalInOut(board.ESP_BUSY)
 esp32_reset = DigitalInOut(board.ESP_RESET)
 spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
 esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
-status_light = neopixel.NeoPixel(
-    board.NEOPIXEL, 1, brightness=0.2
-)
+status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2)
 wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
 # now do things like wifi.get() and wifi.post()

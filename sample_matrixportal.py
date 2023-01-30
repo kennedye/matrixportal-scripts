@@ -23,7 +23,7 @@ import adafruit_lis3dh  # accelerometer
 import adafruit_ds3231  # RTC
 
 try:
-    from secrets import secrets
+    from _secrets import af_secrets as secrets
 except ImportError:
     print("WiFi secrets are kept in secrets.py, please add them there!")
     raise

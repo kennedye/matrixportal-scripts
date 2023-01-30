@@ -135,3 +135,4 @@ dmypy.json
 # secrets.py file used for matrixportal wifi settings
 secrets.py
 af_secrets.py
+_secrets.py

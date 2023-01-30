@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2019 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
 
+# pylint: disable=import-error,unused-import
+
 import time
 import board
 import busio

@@ -80,7 +80,7 @@ matrix = rgbmatrix.RGBMatrix(
     tile=MX_TILE_DOWN,
     serpentine=MX_SERPENTINE,
     rgb_pins=mx_rgb_pins,
-    addr_pins=mx_addr_pins,  # use mx_addr_pins_64 when using 64x64 panels
+    addr_pins=mx_addr_pins_64 if MX_BASE_HEIGHT==64 else mx_addr_pins,
     clock_pin=mx_clock_pin,
     latch_pin=mx_latch_pin,
     output_enable_pin=mx_output_enable_pin,

@@ -1,9 +1,9 @@
+# pylint: disable=line-too-long,import-error,unused-import,too-many-locals,invalid-name,unused-variable
 """
 sample.py
 very basic matrixportal code
 not for individual resale
 """
-# pylint: disable=import-error,unused-import
 import time
 import os
 import sys
@@ -28,7 +28,7 @@ except ImportError:
     print("WiFi secrets are kept in secrets.py, please add them there!")
     raise
 
-def main():  # pylint: disable=too-many-locals
+def main():
     """
     they call it main.
     """
@@ -117,7 +117,7 @@ def main():  # pylint: disable=too-many-locals
     spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
     esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
     status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2)
-    wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)  # pylint: disable=unused-variable
+    wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
     # now do things like wifi.get() and wifi.post()
 
 if __name__ == "__main__":

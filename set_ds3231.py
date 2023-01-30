@@ -1,7 +1,12 @@
+# pylint: disable=line-too-long,import-error,unused-import,too-many-locals,invalid-name
+"""
+set_ds3231.py
+copied from https://github.com/adafruit/Adafruit_CircuitPython_ESP32SPI/blob/main/examples/esp32spi_localtime.py
+and tweaked ever so slightly
+"""
+
 # SPDX-FileCopyrightText: 2019 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
-
-# pylint: disable=import-error,unused-import
 
 import time
 import board
@@ -19,7 +24,7 @@ except ImportError:
     print("WiFi secrets are kept in secrets.py, please add them there!")
     raise
 
-def main():  # pylint: disable=too-many-locals
+def main():
     """
     they call it main.
     """
@@ -48,7 +53,7 @@ def main():  # pylint: disable=too-many-locals
             print("Fetching json from", TIME_API)
             response = wifi.get(TIME_API)
             break
-        except OSError as e:  #pylint: disable=invalid-name
+        except OSError as e:
             print("Failed to get data, retrying\n", e)
             continue
 

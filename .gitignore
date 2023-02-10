@@ -132,7 +132,8 @@ dmypy.json
 .vscode
 *.code-workspace
 
-# secrets.py file used for matrixportal wifi settings
+# files used for matrixportal settings
 secrets.py
 af_secrets.py
 _secrets.py
+settings.toml

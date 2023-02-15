@@ -1,8 +1,11 @@
+# pylint: disable=line-too-long,import-error,unused-import,too-many-locals,invalid-name,unused-variable,too-many-statements,invalid-envvar-default,too-few-public-methods
 import os
 import board
 import rgbmatrix
 
-class led_panel():
+class LedPanel():
+    """simple class to define a panel instance
+    """
 
     def __init__(self):
         # see https://learn.adafruit.com/rgb-led-matrices-matrix-panels-with-circuitpython/advanced-multiple-panels
@@ -16,7 +19,6 @@ class led_panel():
         mx_chain_across = os.getenv("mx_chain_across", 1)  # number of panels across
         mx_tile_down = os.getenv("mx_tile_down", 1)  # number of panels high
         mx_serpentine = (os.getenv("mx_serpentine") == "True", "True")  # whether alternate panels are rotated to shorten cabling
-        mx_auto_refresh = (os.getenv("mx_auto_refresh") == "True", "True")  # or False if refreshing the display manually
         # fmt: on
 
         mx_width = mx_base_width * mx_chain_across
@@ -52,4 +54,3 @@ class led_panel():
             latch_pin=mx_latch_pin,
             output_enable_pin=mx_output_enable_pin,
         )
-

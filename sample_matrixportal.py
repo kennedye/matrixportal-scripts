@@ -21,7 +21,7 @@ from adafruit_esp32spi import adafruit_esp32spi_wifimanager
 import adafruit_requests as requests
 import adafruit_lis3dh  # accelerometer
 import adafruit_ds3231  # RTC
-from led_panel import led_panel
+from led_panel import LedPanel
 
 try:
     from _secrets import af_secrets as secrets
@@ -57,9 +57,9 @@ def main():
     # get rid of any pre-existing display
     displayio.release_displays()
 
-    matrix = led_panel()
+    panel = LedPanel()
     mx_auto_refresh = (os.getenv("mx_auto_refresh") == "True", "True")  # or False if refreshing the display manually
-    display = framebufferio.FramebufferDisplay(matrix.matrix, auto_refresh=mx_auto_refresh)
+    display = framebufferio.FramebufferDisplay(panel.matrix, auto_refresh=mx_auto_refresh)
 
     master_group = displayio.Group()
 

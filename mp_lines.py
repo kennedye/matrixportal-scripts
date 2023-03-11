@@ -330,7 +330,7 @@ def main():
             i = 0
         for x in range(0, panel.matrix.height):
             for y in range(0, panel.matrix.width):
-                bitmap[x][y] = i
+                bitmap[y][x] = i
 
 
 if __name__ == "__main__":

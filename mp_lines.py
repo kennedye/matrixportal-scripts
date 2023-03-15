@@ -283,8 +283,8 @@ def main():
     displayio.release_displays()
 
     panel = LedPanel()
-    mx_auto_refresh = (os.getenv("mx_auto_refresh") == "True", "True")  # or False if refreshing the display manually
-    display = framebufferio.FramebufferDisplay(panel.matrix, auto_refresh=mx_auto_refresh)
+    panel_auto_refresh = (os.getenv("panel_auto_refresh") == "True", "True")  # or False if refreshing the display manually
+    display = framebufferio.FramebufferDisplay(panel.matrix, auto_refresh=panel_auto_refresh)
 
     master_group = displayio.Group()
 

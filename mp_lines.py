@@ -288,7 +288,7 @@ def main():
 
     master_group = displayio.Group()
 
-    display.show(master_group)
+    display.root_group = master_group
 
     i2c = board.I2C()  # read for accelerometer and RTC
 

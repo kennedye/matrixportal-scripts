@@ -21,7 +21,7 @@ from adafruit_esp32spi import adafruit_esp32spi_wifimanager
 import adafruit_requests as requests
 import adafruit_lis3dh  # accelerometer
 import adafruit_ds3231  # RTC
-from led_panel import LedPanel
+from led_panel import led_panel
 
 try:
     from _secrets import af_secrets as secrets
@@ -75,13 +75,13 @@ def main():
     # get rid of any pre-existing display
     displayio.release_displays()
 
-    panel = LedPanel()
-    panel_auto_refresh = (os.getenv("panel_auto_refresh") == "True", "True")  # or False if refreshing the display manually
-    display = framebufferio.FramebufferDisplay(panel.matrix, auto_refresh=panel_auto_refresh)
+    matrix = led_panel()
+    mx_auto_refresh = (os.getenv("mx_auto_refresh") == "True", "True")  # or False if refreshing the display manually
+    display = framebufferio.FramebufferDisplay(matrix.matrix, auto_refresh=mx_auto_refresh)
 
     master_group = displayio.Group()
 
-    display.show(master_group)
+    display.root_group = master_group
 
     i2c = board.I2C()  # read for accelerometer and RTC
 
@@ -111,16 +111,16 @@ def main():
         tile1 = code_line()
         group1.append(tile1)
 
-        group1.x = random.randint(0, panel.matrix.width)
+        group1.x = random.randint(0, matrix.matrix.width)
         group1.y = -8
 
         master_group.append(group1)
-        display.show(master_group)
+        display.root_group = master_group
 
         time.sleep(2)
 
         pos = group1.y
-        for i in range(pos, panel.matrix.height + 8):
+        for i in range(pos, matrix.matrix.height + 8):
             time.sleep(0.05)
             group1.y = i
 

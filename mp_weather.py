@@ -66,7 +66,7 @@ def main():
 
     master_group = displayio.Group()
 
-    display.show(master_group)
+    display.root_group=master_group
 
     i2c = board.I2C()  # read for accelerometer and RTC
 
@@ -87,7 +87,7 @@ def main():
     esp32_reset = DigitalInOut(board.ESP_RESET)
     spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
     esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
-    status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2)
+    status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=1)
     wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
     # now do things like wifi.get() and wifi.post()
 

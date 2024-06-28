@@ -4,6 +4,7 @@ mp_simpleclock.py
 just the text ma'am
 """
 import time
+import json
 import os
 import sys
 import random
@@ -18,7 +19,7 @@ from digitalio import DigitalInOut
 import neopixel
 from adafruit_esp32spi import adafruit_esp32spi
 from adafruit_esp32spi import adafruit_esp32spi_wifimanager
-import adafruit_requests as requests
+# import adafruit_requests as requests
 import adafruit_lis3dh  # accelerometer
 import adafruit_ds3231  # RTC
 from led_panel import LedPanel
@@ -26,11 +27,17 @@ from adafruit_display_text import label
 from adafruit_bitmap_font import bitmap_font
 import adafruit_fancyled.adafruit_fancyled as fancy
 
-try:
-    from _secrets import af_secrets as secrets
-except ImportError:
-    print("WiFi secrets are kept in secrets.py, please add them there!")
-    raise
+secrets = {
+    "ssid": os.getenv("CIRCUITPY_WIFI_SSID"),
+    "password": os.getenv("CIRCUITPY_WIFI_PASSWORD"),
+}
+if secrets == {"ssid": None, "password": None}:
+    try:
+        # Fallback on secrets.py until depreciation is over and option is removed
+        from _secrets import af_secrets as secrets
+    except ImportError:
+        print("WiFi secrets are kept in settings.toml, please add them there!")
+        raise
 
 
 def compatibility_check():
@@ -73,7 +80,7 @@ def main():
     # accelerometer - https://docs.circuitpython.org/projects/lis3dh/en/latest/
     lis3dh = adafruit_lis3dh.LIS3DH_I2C(i2c, address=0x19)
     # Set range of accelerometer (can be RANGE_2_G, RANGE_4_G, RANGE_8_G or RANGE_16_G).
-    lis3dh.range = adafruit_lis3dh.RANGE_2_G
+    lis3dh.range = adafruit_lis3dh.RANGE_4_G
     # then do stuff with lis3dh.acceleration or the shake/tap functions
     lis3dh.set_tap(2, 60)
 
@@ -88,7 +95,7 @@ def main():
     spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
     esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
     status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=1)
-    wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
+    wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light, attempts=6, debug=True)
     # now do things like wifi.get() and wifi.post()
 
     font = bitmap_font.load_font("/fonts/4x6.pcf")
@@ -101,10 +108,19 @@ def main():
     ip_label_anchored_position = (0, 0)
     ip_label.text = "IP"
     master_group.append(ip_label)
-    url_getip="https://api.ipgeolocation.io/getip"
-    getip=wifi.get(url_getip).json()
-    ip=getip["ip"]
+    url_getip="http://ip-api.com/json/"
+    while True:
+        try:
+            response=wifi.get(url_getip)
+            break
+        except RuntimeError as e:
+            print("Failed to get data, retrying\n", e)
+            wifi.reset()
+            continue
+    getip=response.json()
+    ip=getip["query"]
     print(ip)
+    response.close()
 
     loc_label = label.Label(font2)
     loc_label.x = 0
@@ -113,9 +129,6 @@ def main():
     loc_label_anchored_position = (0, 0)
     loc_label.text = "loc"
     master_group.append(loc_label)
-    url_getloc="https://api.ipgeolocation.io/ipgeo?apiKey=" + secrets["gl_apikey"] + "&ip=" + ip
-    getloc=wifi.get(url_getloc).json()
-    print(getloc)
 
     w_label = label.Label(font2)
     w_label.x = 0
@@ -124,9 +137,17 @@ def main():
     w_label_anchored_position = (0, 0)
     w_label.text = "weather"
     master_group.append(w_label)
-    url_w = "https://api.openweathermap.org/data/2.5/weather?lat=" + getloc["latitude"] + "&lon=" + getloc["longitude"] + "&appid=" + secrets["ow_apikey"] + "&units=imperial"
-    w=wifi.get(url_w).json()
-    print(w)
+    url_w = "https://api.openweathermap.org/data/2.5/weather?lat=" + str(getip["lat"]) + "&lon=" + str(getip["lon"]) + "&appid=" + os.getenv("ow_apikey") + "&units=imperial"
+    while True:
+        try:
+            response=wifi.get(url_w)
+            break
+        except RuntimeError as e:
+            print("Failed to get data, retrying\n", e)
+            wifi.reset()
+            continue
+    w=response.json()
+    print(json.dumps(w))
 
     master_group.pop()
     master_group.pop()

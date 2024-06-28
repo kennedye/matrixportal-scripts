@@ -1,4 +1,4 @@
-# pylint: disable=line-too-long,import-error,unused-import,too-many-locals,invalid-name,unused-variable,too-many-statements,invalid-envvar-default
+# pylint: disable=line-too-long,import-error,unused-import,too-many-locals,unused-variable,too-many-statements,invalid-envvar-default
 """
 mp_random_gamma.py
 draw some random dots over and over
@@ -25,14 +25,20 @@ import adafruit_ds3231  # RTC
 import adafruit_fancyled.adafruit_fancyled as fancy
 from led_panel import LedPanel
 
-try:
-    from _secrets import af_secrets as secrets
-except ImportError:
-    print("WiFi secrets are kept in secrets.py, please add them there!")
-    raise
+def get_secrets() -> dict:
+    """
+    retrieve wifi secrets from settings.toml
+    (requires CircuitPython >= 8.0)
+    """
+    secrets = {
+        "ssid": os.getenv("CIRCUITPY_WIFI_SSID"),
+        "password": os.getenv("CIRCUITPY_WIFI_PASSWORD"),
+    }
+    if secrets == {"ssid": None, "password": None}:
+        print("WiFi secrets are kept in settings.toml, please add them there!")
+    return secrets
 
-
-def compatibility_check():
+def compatibility_check() -> None:
     """
     basic checks to make sure the board and version are correct
     """
@@ -47,14 +53,29 @@ def compatibility_check():
         print("this code is designed to run on CircuitPython 8.0 or later")
         sys.exit(1)
 
-
-def main():
+def create_wifi(wifi_secrets: dict) -> adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager:
     """
-    they call it main.
+    set up a WifiManager structure
+    """
+    esp32_cs = DigitalInOut(board.ESP_CS)
+    esp32_ready = DigitalInOut(board.ESP_BUSY)
+    esp32_reset = DigitalInOut(board.ESP_RESET)
+    spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
+    esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
+    status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2)
+    return adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, wifi_secrets, status_light)
+
+
+def main() -> None:
+    """
+    ...main.
     """
 
     # is it safe
     compatibility_check()
+
+    # get wifi secrets
+    secrets = get_secrets()
 
     # get rid of any pre-existing display
     displayio.release_displays()
@@ -65,7 +86,7 @@ def main():
 
     master_group = displayio.Group()
 
-    display.show(master_group)
+    display.root_group = master_group
 
     i2c = board.I2C()  # read for accelerometer and RTC
 
@@ -80,14 +101,9 @@ def main():
     current_time = ds3231.datetime  # struct_time
 
     # wifi
-    esp32_cs = DigitalInOut(board.ESP_CS)
-    esp32_ready = DigitalInOut(board.ESP_BUSY)
-    esp32_reset = DigitalInOut(board.ESP_RESET)
-    spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
-    esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
-    status_light = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2)
-    wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets, status_light)
+    wifi = create_wifi(secrets)
     # now do things like wifi.get() and wifi.post()
+    wifi.pixel_status((255,165,0))
 
     bitmap = displayio.Bitmap(panel.matrix.width, panel.matrix.height, 256)
     palette = displayio.Palette(256)
@@ -109,8 +125,12 @@ def main():
         if bitmap[x, y] == 0:
             bitmap[x, y] = color
         now = time.monotonic()
-        if now - initial > 5:
-            bitmap.fill(0)
+        if now - initial > 10:
+            color = 0
+            x = random.randint(0, panel.matrix.width - 1)
+            y = random.randint(0, panel.matrix.height - 1)
+            if bitmap[x, y] != color:
+                bitmap[x, y] = color
             initial = now
             for i in range(1, 254):
                 r = random.randint(1, 255)

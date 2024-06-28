@@ -48,7 +48,7 @@ def compatibility_check():
 
 def main():
     """
-    they call it main.
+    ...main.
     """
 
     # is it safe
@@ -58,12 +58,17 @@ def main():
     displayio.release_displays()
 
     panel = LedPanel()
-    panel_auto_refresh = (os.getenv("panel_auto_refresh") == "True", "True")  # or False if refreshing the display manually
-    display = framebufferio.FramebufferDisplay(panel.matrix, auto_refresh=panel_auto_refresh)
+    panel_auto_refresh = (
+        os.getenv("panel_auto_refresh") == "True",
+        "True",
+    )  # or False if refreshing the display manually
+    display = framebufferio.FramebufferDisplay(
+        panel.matrix, auto_refresh=panel_auto_refresh
+    )
 
     master_group = displayio.Group()
 
-    display.show(master_group)
+    display.root_group = master_group
 
     i2c = board.I2C()  # read for accelerometer and RTC
 

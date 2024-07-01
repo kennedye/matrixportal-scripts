@@ -14,7 +14,8 @@ import framebufferio
 import rgbmatrix
 import terminalio
 from rainbowio import colorwheel
-from digitalio import DigitalInOut
+from digitalio import DigitalInOut, Direction, Pull
+from adafruit_debouncer import Debouncer
 import neopixel
 from adafruit_esp32spi import adafruit_esp32spi
 from adafruit_esp32spi import adafruit_esp32spi_wifimanager
@@ -24,6 +25,8 @@ import adafruit_ds3231  # RTC
 from led_panel import LedPanel
 
 
+# LED gamma correction table -
+# https://learn.adafruit.com/led-tricks-gamma-correction/the-quick-fix
 # fmt: off
 gamma = [
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -138,6 +141,34 @@ def main() -> None:
     # if M4, create wifi object with secrets and use wifi.get() / wifi.post()
     if "Matrix Portal M4" in os.uname().machine:
         wifi = create_wifi_M4(get_secrets)
+
+    # set up MatrixPortal buttons
+    button_up = DigitalInOut(board.BUTTON_UP)
+    button_down = DigitalInOut(board.BUTTON_DOWN)
+    button_up.direction = button_down.direction = Direction.INPUT
+    button_up.pull = button_down.pull = Pull.UP
+    switch_up = Debouncer(button_up)
+    switch_down = Debouncer(button_down)
+
+    # do stuff loop
+    while True:
+        # check button status
+        switch_up.update()
+        switch_down.update()
+
+        # see below for button checks
+        # if switch_up.fell:
+        #     print("Just pressed up")
+        # if switch_up.rose:
+        #     print("Just released up")
+        # if switch_down.fell:
+        #     print("Just pressed down")
+        # if switch_down.rose:
+        #     print("Just released down")
+        # if switch_up.value:
+        #     pass
+        # else:
+        #     print("up pressed")
 
 
 if __name__ == "__main__":

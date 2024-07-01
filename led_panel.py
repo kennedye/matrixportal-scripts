@@ -13,12 +13,12 @@ class LedPanel():
 
         # note: these values are read from settings.toml, only available in CircuitPython 8.0 and later
         # fmt: off
-        panel_base_width = os.getenv("panel_base_width", 32)  # width of a single panel
-        panel_base_height = os.getenv("panel_base_height", 32)  # height of a single panel
-        panel_bit_depth = os.getenv("panel_bit_depth", 3)  # valid values: 1-6
-        panel_chain_across = os.getenv("panel_chain_across", 1)  # number of panels across
-        panel_tile_down = os.getenv("panel_tile_down", 1)  # number of panels high
-        panel_serpentine = (os.getenv("panel_serpentine") == "True", "True")  # whether alternate panels are rotated to shorten cabling
+        panel_base_width = os.getenv("mx_base_width", 32)  # width of a single panel
+        panel_base_height = os.getenv("mx_base_height", 32)  # height of a single panel
+        panel_bit_depth = os.getenv("mx_bit_depth", 3)  # valid values: 1-6
+        panel_chain_across = os.getenv("mx_chain_across", 1)  # number of panels across
+        panel_tile_down = os.getenv("mx_tile_down", 1)  # number of panels high
+        panel_serpentine = (os.getenv("mx_serpentine") == "True", "True")  # whether alternate panels are rotated to shorten cabling
         # fmt: on
 
         panel_width = panel_base_width * panel_chain_across
@@ -26,8 +26,8 @@ class LedPanel():
 
         # what kind of board are we
         board_type = os.uname().machine
-        if "Matrix Portal M4" in board_type:
-            # matrixportal M4 pins
+        if "Matrix" in board_type:
+            # matrixportal M4/S3 pins
             panel_rgb_pins = [
                 board.MTX_R1,
                 board.MTX_G1,

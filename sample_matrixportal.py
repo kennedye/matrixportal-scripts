@@ -140,7 +140,7 @@ def main() -> None:
 
     # if M4, create wifi object with secrets and use wifi.get() / wifi.post()
     if "Matrix Portal M4" in os.uname().machine:
-        wifi = create_wifi_M4(get_secrets)
+        wifi = create_wifi_M4(get_secrets())
 
     # set up MatrixPortal buttons
     button_up = DigitalInOut(board.BUTTON_UP)

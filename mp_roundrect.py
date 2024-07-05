@@ -15,6 +15,7 @@ import terminalio
 from rainbowio import colorwheel
 from digitalio import DigitalInOut, Direction, Pull
 from adafruit_debouncer import Debouncer
+import adafruit_fancyled.adafruit_fancyled as fancy
 import neopixel
 from adafruit_esp32spi import adafruit_esp32spi
 from adafruit_esp32spi import adafruit_esp32spi_wifimanager
@@ -151,13 +152,13 @@ def main() -> None:
     switch_down = Debouncer(button_down)
 
     rr_size = 10
-    rr_start = int((panel.matrix.width / 2) - (rr_size / 2))
+    rr_start = int((panel.matrix.height / 2) - (rr_size / 2))
     rr_1 = RoundRect(
-        rr_start, 2, rr_size, rr_size, 2, fill=0x0, outline=0xFFFFFF, stroke=1
+        rr_size, rr_start, rr_size, rr_size, 2, fill=0x0, outline=0xFFFFFF, stroke=1
     )
     rr_2 = RoundRect(
-        rr_start,
         rr_size + 20,
+        rr_start,
         rr_size,
         rr_size,
         2,
@@ -166,8 +167,8 @@ def main() -> None:
         stroke=1,
     )
     rr_3 = RoundRect(
-        rr_start,
         rr_size + 40,
+        rr_start,
         rr_size,
         rr_size,
         2,
@@ -187,15 +188,33 @@ def main() -> None:
 
         # see below for button checks
         if switch_up.fell:
-            rr_1.fill = 0xFF0000
-            rr_2.fill = 0xFFFF00
-            rr_3.fill = 0x00FF00
+            rr_1.fill = fancy.gamma_adjust(
+                fancy.CRGB(255, 0, 0), gamma_value=1.8
+            ).pack()  # red
+            rr_2.fill = fancy.gamma_adjust(
+                fancy.CRGB(255, 255, 0), gamma_value=1.8
+            ).pack()  # yellow
+            rr_3.fill = fancy.gamma_adjust(
+                fancy.CRGB(0, 255, 0), gamma_value=1.8
+            ).pack()  # green
+            rr_1.y = 0 if rr_1.y > panel.matrix.height else rr_1.y + 1
+            rr_2.y = 0 if rr_2.y > panel.matrix.height else rr_2.y + 1
+            rr_3.y = 0 if rr_3.y > panel.matrix.height else rr_3.y + 1
         # if switch_up.rose:
         #     print("Just released up")
         if switch_down.fell:
-            rr_1.fill = 0xFFC0CB
-            rr_2.fill = 0xFFA500
-            rr_3.fill = 0xFF00FF
+            rr_1.fill = fancy.gamma_adjust(
+                fancy.CRGB(255, 192, 203), gamma_value=1.8
+            ).pack()  # pink
+            rr_2.fill = fancy.gamma_adjust(
+                fancy.CRGB(255, 165, 0), gamma_value=1.8
+            ).pack()  # orange
+            rr_3.fill = fancy.gamma_adjust(
+                fancy.CRGB(255, 0, 255), gamma_value=1.8
+            ).pack()  # purple
+            rr_1.y = panel.matrix.height if rr_1.y < 0 else rr_1.y - 1
+            rr_2.y = panel.matrix.height if rr_2.y < 0 else rr_2.y - 1
+            rr_3.y = panel.matrix.height if rr_3.y < 0 else rr_3.y - 1
         # if switch_down.rose:
         #     print("Just released down")
         # if switch_up.value:

@@ -187,7 +187,7 @@ def main() -> None:
         switch_down.update()
 
         # see below for button checks
-        if switch_up.fell:
+        if switch_down.fell:
             rr_1.fill = fancy.gamma_adjust(
                 fancy.CRGB(255, 0, 0), gamma_value=1.8
             ).pack()  # red
@@ -200,9 +200,7 @@ def main() -> None:
             rr_1.y = 0 if rr_1.y > panel.matrix.height else rr_1.y + 1
             rr_2.y = 0 if rr_2.y > panel.matrix.height else rr_2.y + 1
             rr_3.y = 0 if rr_3.y > panel.matrix.height else rr_3.y + 1
-        # if switch_up.rose:
-        #     print("Just released up")
-        if switch_down.fell:
+        if switch_up.fell:
             rr_1.fill = fancy.gamma_adjust(
                 fancy.CRGB(255, 192, 203), gamma_value=1.8
             ).pack()  # pink
@@ -215,12 +213,6 @@ def main() -> None:
             rr_1.y = panel.matrix.height if rr_1.y < 0 else rr_1.y - 1
             rr_2.y = panel.matrix.height if rr_2.y < 0 else rr_2.y - 1
             rr_3.y = panel.matrix.height if rr_3.y < 0 else rr_3.y - 1
-        # if switch_down.rose:
-        #     print("Just released down")
-        # if switch_up.value:
-        #     pass
-        # else:
-        #     print("up pressed")
 
 
 if __name__ == "__main__":

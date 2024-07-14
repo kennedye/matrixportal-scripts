@@ -168,7 +168,7 @@ def main() -> None:
     total_pixels = panel.matrix.width * panel.matrix.height
     colored_pixels = 0
     while True:
-        wifi.pixel_status((0, 255, 0))
+        # wifi.pixel_status((0, 255, 0))
         while colored_pixels < total_pixels:
             x = random.randint(0, panel.matrix.width - 1)
             y = random.randint(0, panel.matrix.height - 1)
@@ -179,7 +179,7 @@ def main() -> None:
         #                 print(f"colored pixels = {colored_pixels}")
         now = time.monotonic()
         if now - initial > 5:
-            wifi.pixel_status((0, 32, 0))
+            # wifi.pixel_status((0, 32, 0))
             color = 0
             while colored_pixels > 0:
                 x = random.randint(0, panel.matrix.width - 1)

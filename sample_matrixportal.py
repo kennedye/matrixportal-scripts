@@ -29,6 +29,8 @@ try:
     import adafruit_sht4x  # temperature/humidity
 except ImportError as e:
     print(f"unable to import add-on board libraries: {e}")
+    print("ensure all libraries are installed")
+    sys.exit(1)
 
 # import wifi elements
 if "MatrixPortal S3" in os.uname().machine:
@@ -39,12 +41,16 @@ if "MatrixPortal S3" in os.uname().machine:
         import socketpool
     except ImportError as e:
         print(f"unable to import S3 wifi libraries: {e}")
+        print("ensure all libraries are installed")
+        sys.exit(1)
 if "Matrix Portal M4" in os.uname().machine:
     try:
         from adafruit_esp32spi import adafruit_esp32spi
         from adafruit_esp32spi import adafruit_esp32spi_wifimanager
     except ImportError as e:
         print(f"unable to import M4 wifi libraries: {e}")
+        print("ensure all libraries are installed")
+        sys.exit(1)
 
 
 # LED gamma correction table -

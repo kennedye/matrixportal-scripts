@@ -1,4 +1,4 @@
-# pylint: disable=line-too-long,import-error,unused-import,too-many-locals,invalid-name,unused-variable,too-many-statements,invalid-envvar-default
+# pylint: disable=line-too-long,import-error,unused-import
 """
 sample.py
 very basic matrixportal code
@@ -13,16 +13,38 @@ import displayio
 import framebufferio
 import rgbmatrix
 import terminalio
+import neopixel
+import adafruit_requests as requests
 from rainbowio import colorwheel
 from digitalio import DigitalInOut, Direction, Pull
 from adafruit_debouncer import Debouncer
-import neopixel
-from adafruit_esp32spi import adafruit_esp32spi
-from adafruit_esp32spi import adafruit_esp32spi_wifimanager
-import adafruit_requests as requests
-import adafruit_lis3dh  # accelerometer
-import adafruit_ds3231  # RTC
+
+# import custom panel class
 from led_panel import LedPanel
+
+# import add-on boards
+try:
+    import adafruit_lis3dh  # accelerometer
+    import adafruit_ds3231  # RTC
+    import adafruit_sht4x  # temperature/humidity
+except ImportError as e:
+    print(f"unable to import add-on board libraries: {e}")
+
+# import wifi elements
+if "MatrixPortal S3" in os.uname().machine:
+    try:
+        import ipaddress
+        import ssl
+        import wifi
+        import socketpool
+    except ImportError as e:
+        print(f"unable to import S3 wifi libraries: {e}")
+if "Matrix Portal M4" in os.uname().machine:
+    try:
+        from adafruit_esp32spi import adafruit_esp32spi
+        from adafruit_esp32spi import adafruit_esp32spi_wifimanager
+    except ImportError as e:
+        print(f"unable to import M4 wifi libraries: {e}")
 
 
 # LED gamma correction table -
@@ -79,7 +101,7 @@ def compatibility_check() -> None:
         sys.exit(1)
 
 
-def create_wifi_M4(
+def create_wifi_m4(
     wifi_secrets: dict,
 ) -> adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager:
     """
@@ -127,20 +149,31 @@ def main() -> None:
         lis3dh = adafruit_lis3dh.LIS3DH_I2C(i2c, address=0x19)
         # Set range of accelerometer (can be RANGE_2_G, RANGE_4_G, RANGE_8_G or RANGE_16_G).
         lis3dh.range = adafruit_lis3dh.RANGE_2_G
+        lis3dh.set_tap(2, 60)
         # then do stuff with lis3dh.acceleration or the shake/tap functions
     except ValueError as error:
         print(f"unable to initialize LIS3DH: {error}")
 
     # RTC - https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/circuitpython
     try:
-        ds3231 = adafruit_ds3231.DS3231(i2c)
-        current_time = ds3231.datetime  # struct_time
+        ds3231 = adafruit_ds3231.DS3231(i2c)  # pylint: disable=unused-variable
+        # current_time = ds3231.datetime  # struct_time
     except ValueError as error:
         print(f"unable to initialize DS3231: {error}")
 
+    # temperature/humidity - https://learn.adafruit.com/adafruit-sht40-temperature-humidity-sensor/python-circuitpython
+    try:
+        sht = adafruit_sht4x.SHT4x(i2c)
+        sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+        # temperature, relative_humidity = sht.measurements
+    except ValueError as error:
+        print(f"unable to initialize SHT4x: {error}")
+
     # if M4, create wifi object with secrets and use wifi.get() / wifi.post()
     if "Matrix Portal M4" in os.uname().machine:
-        wifi = create_wifi_M4(get_secrets())
+        wifi_mp = create_wifi_m4(get_secrets())  # pylint: disable=unused-variable
+
+    # if S3,
 
     # set up MatrixPortal buttons
     button_up = DigitalInOut(board.BUTTON_UP)

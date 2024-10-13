@@ -7,6 +7,8 @@ not for individual resale
 import time
 import os
 import sys
+import gc
+import rtc
 import board
 import busio
 import displayio
@@ -14,6 +16,7 @@ import framebufferio
 import rgbmatrix
 import terminalio
 import neopixel
+import adafruit_lis3dh
 import adafruit_requests as requests
 from rainbowio import colorwheel
 from digitalio import DigitalInOut, Direction, Pull
@@ -24,7 +27,6 @@ from led_panel import LedPanel
 
 # import add-on boards
 try:
-    import adafruit_lis3dh  # accelerometer
     import adafruit_ds3231  # RTC
     import adafruit_sht4x  # temperature/humidity
 except ImportError as e:
@@ -43,7 +45,7 @@ if "MatrixPortal S3" in os.uname().machine:
         print(f"unable to import S3 wifi libraries: {e}")
         print("ensure all libraries are installed")
         sys.exit(1)
-if "Matrix Portal M4" in os.uname().machine:
+elif "Matrix Portal M4" in os.uname().machine:
     try:
         from adafruit_esp32spi import adafruit_esp32spi
         from adafruit_esp32spi import adafruit_esp32spi_wifimanager
@@ -95,7 +97,10 @@ def compatibility_check() -> None:
     """
     basic checks to make sure the board and version are correct
     """
-    if "Matrix" not in os.uname().machine:
+    if (
+        "MatrixPortal S3" not in os.uname().machine
+        and "Matrix Portal M4" not in os.uname().machine
+    ):
         print(f"unsupported board type: {os.uname().machine}")
         print("this code is designed to run on MatrixPortal M4/S3")
         sys.exit(1)
@@ -124,10 +129,21 @@ def create_wifi_m4(
     )
 
 
-def main() -> None:
+def create_wifi_s3(wifi_secrets: dict) -> str:  # pylint:disable=unused-argument
+    """
+    set up a wifi instance
+    """
+    return "nope"
+
+
+def main() -> None:  # pylint:disable=too-many-locals
     """
     ...main.
     """
+
+    gc.collect()
+    # start_mem = gc.mem_free()  # pylint:disable=no-member
+    # print(f"initial memory: {start_mem} bytes")
 
     # is it safe
     compatibility_check()
@@ -148,38 +164,52 @@ def main() -> None:
 
     display.root_group = master_group
 
-    i2c = board.I2C()  # read for accelerometer and RTC
+    i2c = board.I2C()
 
     # accelerometer - https://docs.circuitpython.org/projects/lis3dh/en/latest/
     try:
         lis3dh = adafruit_lis3dh.LIS3DH_I2C(i2c, address=0x19)
-        # Set range of accelerometer (can be RANGE_2_G, RANGE_4_G, RANGE_8_G or RANGE_16_G).
         lis3dh.range = adafruit_lis3dh.RANGE_2_G
-        lis3dh.set_tap(2, 60)
+        lis3dh.set_tap(2, 60)  # enable double-tap
         # then do stuff with lis3dh.acceleration or the shake/tap functions
+        # range can also be RANGE_4_G, RANGE_8_G, or RANGE_16_G
     except ValueError as error:
         print(f"unable to initialize LIS3DH: {error}")
 
     # RTC - https://learn.adafruit.com/adafruit-ds3231-precision-rtc-breakout/circuitpython
     try:
-        ds3231 = adafruit_ds3231.DS3231(i2c)  # pylint: disable=unused-variable
-        # current_time = ds3231.datetime  # struct_time
+        ds3231 = adafruit_ds3231.DS3231(i2c)
+        current_time = ds3231.datetime  # struct_time
+        print("--\nfound DS3231, relying on it for time")
+        print(
+            f"current date/time: {current_time.tm_year}/{current_time.tm_mon:02d}/{current_time.tm_mday:02d} @ {current_time.tm_hour:02d}:{current_time.tm_min:02d}"
+        )
+        has_rtc = True
     except ValueError as error:
-        print(f"unable to initialize DS3231: {error}")
+        print(f"**\nunable to initialize DS3231: {error}")
+        print("time will not be accurate until wifi connection available")
+        has_rtc = False
 
     # temperature/humidity - https://learn.adafruit.com/adafruit-sht40-temperature-humidity-sensor/python-circuitpython
     try:
         sht = adafruit_sht4x.SHT4x(i2c)
         sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
-        # temperature, relative_humidity = sht.measurements
+        temperature, relative_humidity = sht.measurements
+        print("--\nfound SHT4x, relying on it for temperature/humidity")
+        print(
+            f"current temperature: {temperature:.1f}°C, {(temperature * (9/5)) + 32:.1f}°F"
+        )
+        print(f"current humidity: {relative_humidity:.1f}%")
     except ValueError as error:
-        print(f"unable to initialize SHT4x: {error}")
+        print(f"**\nunable to initialize SHT4x: {error}")
+        print("temperature/humidity will not be available internally")
 
-    # if M4, create wifi object with secrets and use wifi.get() / wifi.post()
+    # create wifi object with secrets
+    # if M4, use wifi.get() / wifi.post()
     if "Matrix Portal M4" in os.uname().machine:
         wifi_mp = create_wifi_m4(get_secrets())  # pylint: disable=unused-variable
-
-    # if S3,
+    elif "MatrixPortal S3" in os.uname().machine:
+        wifi_mp = create_wifi_s3(get_secrets())  # pylint: disable=unused-variable
 
     # set up MatrixPortal buttons
     button_up = DigitalInOut(board.BUTTON_UP)
@@ -188,6 +218,13 @@ def main() -> None:
     button_up.pull = button_down.pull = Pull.UP
     switch_up = Debouncer(button_up)
     switch_down = Debouncer(button_down)
+
+    if not has_rtc:
+        # eventually do wifi time check here but for now:
+        pass
+
+    # end_mem = gc.mem_free()  # pylint:disable=no-member
+    # print(f"final memory: {end_mem} bytes")
 
     # do stuff loop
     while True:
